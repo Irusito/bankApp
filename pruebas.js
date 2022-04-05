@@ -553,4 +553,8 @@ setTimeout(() => {
 
 // setInterval -> asincrona y que no se para (o la paramos nosotros)
 
-setInterval(() => {}, interval);
+let i = 0;
+setInterval(() => {
+  i += 1;
+  console.log(i);
+}, 1000);

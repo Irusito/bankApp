@@ -37,8 +37,9 @@ const account4 = {
 const accounts = [account1, account2, account3, account4];
 
 // Elements
+
 const labelWelcome = document.querySelector('.welcome');
-const labelDate = document.querySelector('.date');
+// const labelDate = document.querySelector('.date');
 const labelBalance = document.querySelector('.balance__value');
 const labelSumIn = document.querySelector('.summary__value--in');
 const labelSumOut = document.querySelector('.summary__value--out');
@@ -85,6 +86,8 @@ createUsername(accounts);
 // global variables
 
 let currentAccount;
+let timer;
+let order = 'afterBegin';
 
 // funciones
 
@@ -92,6 +95,8 @@ function updateUI(currentAccount) {
   displayMovements(currentAccount.movements);
   displayBalance(currentAccount);
   displaySummary(currentAccount);
+  if (timer) clearInterval(timer);
+  timer = setTimer();
 }
 
 const displayMovements = function (movements) {
@@ -101,10 +106,9 @@ const displayMovements = function (movements) {
 
     const html = `<div class="movements__row">
           <div class="movements__type movements__type--${type}">${type}</div>
-          <div class="movements__date">3 days ago</div>
           <div class="movements__value">${movement}€</div>
         </div>`;
-    containerMovements.insertAdjacentHTML('afterbegin', html);
+    containerMovements.insertAdjacentHTML(order, html);
   });
 };
 
@@ -200,6 +204,7 @@ btnTransfer.addEventListener('click', function (e) {
     transferAccount.movements.push(amount);
 
     updateUI(currentAccount);
+    inputTransferAmount.value = inputTransferTo.value = '';
   } else {
     console.log('transferencia error');
   }
@@ -225,10 +230,7 @@ btnClose.addEventListener('click', function (e) {
     accounts.splice(index, 1);
 
     // cerrar perfil
-    containerApp.style.opacity = 0;
-    labelWelcome.textContent = `Log in to get started`;
-    inputCloseUsername.value = inputClosePin.value = '';
-    inputClosePin.blur();
+    logout(currentAccount);
   } else {
     console.log('close error, credenciales incorrectas');
   }
@@ -255,7 +257,54 @@ btnLoan.addEventListener('click', function (e) {
     updateUI(currentAccount);
   } else {
     console.log(
-      'loan error, el préstamo debe ser mayor al 10% de cualquier depósito anterior'
+      'loan error, el préstamo debe ser menor al 10% de algún depósito anterior'
     );
   }
 });
+
+// sort (ordenar movements)
+
+btnSort.addEventListener('click', function (e) {
+  console.log(`Ordenar movimientos`);
+  e.preventDefault();
+
+  order = order === 'afterBegin' ? 'beforeEnd' : 'afterBegin';
+  updateUI(currentAccount);
+});
+
+// logout
+
+function logout() {
+  currentAccount = null;
+  containerApp.style.opacity = 0;
+  labelWelcome.textContent = `Log in to get started`;
+
+  inputCloseUsername.value =
+    inputClosePin.value =
+    inputLoanAmount.value =
+    inputTransferAmount.value =
+    inputLoginPin.value =
+    inputLoginUsername.value =
+    inputTransferTo.value =
+      '';
+}
+// logout Timer
+
+function setTimer() {
+  let time = 301;
+  const tick = () => {
+    time -= 1;
+    const min = Math.trunc(time / 60) // pillar el cociente de una division
+      .toString()
+      .padStart(2, 0);
+    const sec = String(time % 60).padStart(2, 0); // pillar el resto de una division y añadirle el 0 delante con padStart(2 longitud, 0 caracter(es) a rellenar)
+    labelTimer.textContent = `${min}:${sec}`;
+    if (time === 0) {
+      clearInterval(timer);
+      logout(currentAccount);
+    }
+  };
+  tick();
+  const timer = setInterval(tick, 1000);
+  return timer;
+}
